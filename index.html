@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Pacientes Sala</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f0f4f8;
+      color: #1a2b3c;
+      padding: 1rem;
+      padding-bottom: 5rem;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0077b6;
+    }
+    .search-box {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border-radius: 12px;
+      border: 1px solid #ccdbe8;
+      background: white;
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .search-box:focus {
+      border-color: #0077b6;
+    }
+    .patient-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .patient-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .patient-card:active {
+      transform: scale(0.99);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .bed-number {
+      background: #0077b6;
+      color: white;
+      font-weight: 700;
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .info {
+      flex: 1;
+    }
+    .patient-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.15rem;
+    }
+    .diagnosis-preview {
+      color: #5a6d7e;
+      font-size: 0.9rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .alert-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #e63946;
+      flex-shrink: 0;
+    }
+    .fab {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: #0077b6;
+      color: white;
+      width: 56px;
+      height: 56px;
+      border-radius: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      box-shadow: 0 4px 12px rgba(0,119,182,0.4);
+      cursor: pointer;
+      z-index: 100;
+      border: none;
+      transition: background 0.2s;
+    }
+    .fab:active {
+      background: #005f8a;
+    }
+    .empty-state {
+      text-align: center;
+      color: #7a8b99;
+      margin-top: 3rem;
+    }
+    .empty-state p {
+      font-size: 1.1rem;
+    }
+
+    /* Formulario deslizante */
+    .overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      display: none;
+    }
+    .overlay.active {
+      display: block;
+    }
+    .slide-form {
+      position: fixed;
+      bottom: -100%;
+      left: 0; right: 0;
+      background: white;
+      border-radius: 20px 20px 0 0;
+      padding: 1.5rem 1.5rem 2rem;
+      z-index: 300;
+      transition: bottom 0.3s ease;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .slide-form.active {
+      bottom: 0;
+    }
+    .form-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.2rem;
+    }
+    .form-header h2 {
+      font-size: 1.3rem;
+      color: #0077b6;
+      font-weight: 700;
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #7a8b99;
+      cursor: pointer;
+      padding: 0.5rem;
+    }
+    .form-body label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+      color: #1a2b3c;
+      font-size: 0.9rem;
+    }
+    .form-body input,
+    .form-body textarea {
+      width: 100%;
+      padding: 0.7rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccdbe8;
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .form-body input:focus,
+    .form-body textarea:focus {
+      border-color: #0077b6;
+    }
+    .save-btn {
+      width: 100%;
+      padding: 0.9rem;
+      background: #0077b6;
+      color: white;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      margin-top: 0.5rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .save-btn:active {
+      background: #005f8a;
+    }
+
+    /* Modal de detalle */
+    .modal {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      width: 90%;
+      max-width: 400px;
+      z-index: 400;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease;
+    }
+    .modal.active {
+      transform: translate(-50%, -50%) scale(1);
+    }
+    .modal h3 {
+      color: #0077b6;
+      margin-bottom: 0.8rem;
+    }
+    .modal p {
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+    }
+    .modal-btns {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .modal-btns button {
+      flex: 1;
+      padding: 0.7rem;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-delete {
+      background: #e63946;
+      color: white;
+    }
+    .btn-close-modal {
+      background: #ccdbe8;
+      color: #1a2b3c;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🏥 Pacientes en sala</h1>
+    <span id="patientCount" style="font-weight:600;color:#5a6d7e;">0</span>
+  </div>
+
+  <input type="text" class="search-box" id="searchInput" placeholder="Buscar por nombre o diagnóstico...">
+
+  <div class="patient-list" id="patientList">
+    <div class="empty-state">
+      <p>📋 No hay pacientes ingresados.</p>
+      <p style="font-size:0.9rem; margin-top:0.5rem;">Usa el botón + para añadir el primero.</p>
+    </div>
+  </div>
+
+  <button class="fab" id="addPatientBtn" title="Nuevo ingreso">+</button>
+
+  <!-- Formulario deslizante -->
+  <div class="overlay" id="formOverlay"></div>
+  <div class="slide-form" id="slideForm">
+    <div class="form-header">
+      <h2>🩺 Nuevo ingreso</h2>
+      <button class="close-btn" id="closeFormBtn">✕</button>
+    </div>
+    <div class="form-body">
+      <label for="camaInput">Nº Cama *</label>
+      <input type="number" id="camaInput" placeholder="Ej: 304" required>
+
+      <label for="nombreInput">Nombre completo *</label>
+      <input type="text" id="nombreInput" placeholder="Nombre y apellidos" required>
+
+      <label for="diagInput">Diagnóstico *</label>
+      <input type="text" id="diagInput" placeholder="Motivo de ingreso" required>
+
+      <label for="obsInput">Observaciones</label>
+      <textarea id="obsInput" rows="2" placeholder="Notas, constantes..."></textarea>
+
+      <label for="medInput">Médico responsable</label>
+      <input type="text" id="medInput" placeholder="Dr./Dra.">
+
+      <label for="alerInput">Alergias</label>
+      <input type="text" id="alerInput" placeholder="Alergias conocidas">
+
+      <button class="save-btn" id="savePatientBtn">Guardar paciente</button>
+    </div>
+  </div>
+
+  <!-- Librerías -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/3.2.4/dexie.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <script>
+    console.log('✅ index.html cargado correctamente...');
+  </script>
+  <script src="js/db.js"></script>
+  <script src="js/app.js"></script>
+</body>
+  </html>
